@@ -21,6 +21,10 @@ class GitUtil
 		return File.directory?("#{gitPath}/.git")
 	end
 
+	def self.isCommitId?(sha1)
+		return sha1.to_s.match?(/[0-9a-f]{5,40}/)
+	end
+
 	def self.ensureSha1(sha1)
 		sha= sha1.to_s.match(/[0-9a-f]{5,40}/)
 		return sha ? sha[0] : nil
@@ -79,11 +83,11 @@ class GitUtil
 
 	def self.getHeadCommitId(gitPath)
 		result = nil
-		exec_cmd = "git rev-list HEAD -1"
+		exec_cmd = "git rev-list HEAD | tail -n 1"
 		exec_cmd += " 2>/dev/null"
 
 		result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
-		return ensureShas(result.to_s)
+		return ensureSha1(result[0])
 	end
 
 	def self._getTailCommits(gitPath, count = 1)
@@ -96,7 +100,7 @@ class GitUtil
 	end
 
 	def self.getTailCommitId(gitPath)
-		return _getTailCommits( gitPath, 1 ).to_s
+		return _getTailCommits( gitPath, 1 )[0]
 	end
 
 	def self.getActualTailCommitId(gitPath)
