@@ -159,7 +159,7 @@ class GitUtil
 		return filename, aResult
 	end
 
-	def self.parseNumStatPefFile(numStatResult, separator="#####")
+	def self.parseNumStatPerFile(numStatResult, separator="#####")
 		result = {}
 
 		numStatResult.each do |aLine|
@@ -228,48 +228,11 @@ class GitUtil
 		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
 	end
 
-	def self.isGitPath(gitPath)
-		result = Dir.exist?("#{gitPath}/.git")
-		return result
-	end
-
 	def self.getLogNumStatBySha1(gitPath, commitId)
 		exec_cmd = "git log --numstat --pretty=\"\" #{commitId}"
 		exec_cmd += " 2>/dev/null"
 
 		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
-	end
-
-	def self.getHeadCommitId(gitPath)
-		exec_cmd = "git log --pretty=\"%H\" HEAD -1"
-		results = ExecUtil.getExecResultEachLine(exec_cmd, gitPath, false, true)
-		return !results.empty? ? results[0] : nil
-	end
-
-	def self.getTailCommitId(gitPath)
-		return _getTailCommits( gitPath, 1 ).to_s
-	end
-
-	def self._getTailCommits(gitPath, count = 1)
-		result = nil
-		exec_cmd = "git rev-list HEAD | tail -n #{count}"
-		exec_cmd += " 2>/dev/null"
-
-		result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
-		return ensureShas(result)
-	end
-
-	def self.getActualTailCommitId(gitPath)
-		result = nil
-		candidate = _getTailCommits( gitPath, 2 )
-		candidate.reverse_each do | aCommitId |
-			numStatResult = getLogNumStatBySha1( gitPath, aCommitId )
-			if !numStatResult.empty? then
-				result = aCommitId
-				break
-			end
-		end
-		return result
 	end
 
 	def self.getFilesWithGitOpts(gitPath, gitOpt = "", existingFileOnly = true)

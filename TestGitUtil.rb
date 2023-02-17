@@ -18,6 +18,10 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, GitUtil.isGitDirectory(".")
 	end
 
+	def test_getTailCommitId
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getTailCommitId(".")
+	end
+
 	def test_getActualTailCommitId
 		assert_equal DEF_INITIAL_COMMIT, GitUtil.getActualTailCommitId(".")
 	end
