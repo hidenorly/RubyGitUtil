@@ -40,12 +40,21 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, commits.include?(DEF_INITIAL_COMMIT)
 	end
 
-	def get_getLogNumStatBySha1
-		result = GitUtil.getLogNumStat(".", DEF_INITIAL_COMMIT)
+	def test_getLogNumStatBySha1_parseNumStatPerFile
+		result = GitUtil.getLogNumStatBySha1(".", DEF_INITIAL_COMMIT)
 		result = GitUtil.parseNumStatPerFile(result)
 		assert_equal 56, result[".gitignore"][:added]
 		assert_equal 0, result[".gitignore"][:removed]
 		assert_equal 1, result["README.md"][:added]
 		assert_equal 0, result["README.md"][:removed]
 	end
+
+	def test_getLogNumStat_parseNumStatPerAuthor
+		result = GitUtil.getLogNumStat(".", "#####", DEF_INITIAL_COMMIT)
+		result = GitUtil.parseNumStatPerAuthor(result)
+		assert_equal 57, result["hidenorly"][:added]
+		assert_equal 0, result["hidenorly"][:removed]
+	end
+
+
 end
