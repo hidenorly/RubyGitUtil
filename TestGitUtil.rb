@@ -56,5 +56,10 @@ class TestGitUtil < Minitest::Test
 		assert_equal 0, result["hidenorly"][:removed]
 	end
 
+	def test_getFilesWithGitOpts
+		result = GitUtil.getFilesWithGitOpts(".", DEF_INITIAL_COMMIT)
+		assert_equal true, result.include?("README.md")
+		assert_equal true, result.include?(".gitignore")
+	end
 
 end
