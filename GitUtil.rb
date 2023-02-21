@@ -267,9 +267,9 @@ class GitUtil
 		return ""
 	end
 
-	def self.gitBlame(gitPath, filename, line)
+	def self.gitBlame(gitPath, filename, line, commitId="HEAD")
 		results = {}
-		exec_cmd = "git blame -p #{filename} -L #{line},#{line}"
+		exec_cmd = "git blame -p #{filename} -L #{line},#{line} #{commitId}"
 		result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath, false, true, true)
 		if !result.empty? then
 			results[:commitId] = result[0].split(" ")[0]

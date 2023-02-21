@@ -62,4 +62,12 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, result.include?(".gitignore")
 	end
 
+	def test_gitBlame
+		result = GitUtil.gitBlame(".", "README.md", 1, DEF_INITIAL_COMMIT)
+		assert_equal DEF_INITIAL_COMMIT, result[:commitId]
+		assert_equal "hidenorly", result[:author]
+		assert_equal "<hidenorly@users.noreply.github.com>", result[:authorMail]
+		assert_equal "# RubyGitUtil", result[:theLine]
+	end
+
 end
