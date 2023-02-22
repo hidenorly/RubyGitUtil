@@ -40,6 +40,10 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, commits.include?(DEF_INITIAL_COMMIT)
 	end
 
+	def test_containCommitInGit
+		assert_equal true, GitUtil.containCommitInGit?(".", DEF_INITIAL_COMMIT)
+	end
+
 	def test_getLogNumStatBySha1_parseNumStatPerFile
 		result = GitUtil.getLogNumStatBySha1(".", DEF_INITIAL_COMMIT)
 		result = GitUtil.parseNumStatPerFile(result)
