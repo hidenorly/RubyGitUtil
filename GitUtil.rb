@@ -56,7 +56,11 @@ class GitUtil
 
 	def self.getCommitIdList(gitPath, fromRevision=nil, toRevision=nil, gitOptions=nil)
 		exec_cmd = "git log --pretty=\"%H\" --no-merges"
-		exec_cmd += " #{fromRevision}...#{toRevision}" if fromRevision && toRevision
+		if fromRevision && toRevision then
+			exec_cmd += " #{fromRevision}...#{toRevision}"
+		elsif fromRevision then
+			exec_cmd += " #{fromRevision}"
+		end
 		exec_cmd += " #{gitOptions}" if gitOptions
 		exec_cmd += " 2>/dev/null"
 

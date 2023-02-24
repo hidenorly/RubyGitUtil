@@ -34,9 +34,13 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, GitUtil.containCommitOnBranch?(".", DEF_INITIAL_COMMIT)
 	end
 
-
 	def test_getAllCommitIdList
 		commits = GitUtil.getAllCommitIdList(".")
+		assert_equal true, commits.include?(DEF_INITIAL_COMMIT)
+	end
+
+	def test_getCommitIdList
+		commits = GitUtil.getCommitIdList(".", "HEAD")
 		assert_equal true, commits.include?(DEF_INITIAL_COMMIT)
 	end
 
