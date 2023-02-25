@@ -52,6 +52,11 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, GitUtil.commitIdListOflogGrep(".", "getCommitIdList").include?("646182896abdefdfae854e44c074b224649d80b1")
 	end
 
+	def test_show
+		result = GitUtil.show(".", DEF_INITIAL_COMMIT)
+		assert_equal true, result.include?("diff --git a/README.md b/README.md")
+	end
+
 	def test_getLogNumStatBySha1_parseNumStatPerFile
 		result = GitUtil.getLogNumStatBySha1(".", DEF_INITIAL_COMMIT)
 		result = GitUtil.parseNumStatPerFile(result)
