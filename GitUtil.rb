@@ -284,4 +284,16 @@ class GitUtil
 		end
 		return results
 	end
+
+	# patch style
+	def self.formatPatch(gitPath, commitId, outPath=nil, gitOptions=nil)
+		exec_cmd = "git format-patch -1 --subject-prefix=\"\" --no-numbered --stdout #{commitId}"
+		gitOptions = " "+gitOptions if gitOptions && !gitOptions.start_with?(":")
+		exec_cmd += "#{gitOptions}" if gitOptions
+		exec_cmd += " > #{outPath}" if outPath
+		exec_cmd += " 2>/dev/null" if !exec_cmd.include?("2>")
+
+		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
+	end
+
 end

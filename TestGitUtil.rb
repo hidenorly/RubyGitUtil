@@ -87,4 +87,8 @@ class TestGitUtil < Minitest::Test
 		assert_equal "# RubyGitUtil", result[:theLine]
 	end
 
+	def test_formatPatch
+		result = GitUtil.formatPatch(".", DEF_INITIAL_COMMIT )
+		assert_equal true, result.include?("Subject: Initial commit")
+	end
 end
