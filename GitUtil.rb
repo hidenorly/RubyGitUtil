@@ -296,4 +296,55 @@ class GitUtil
 		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
 	end
 
+	def self._parseMbox(commit, aLine)
+		result = false
+		if !commit[:id] && aLine.start_with?("From ") then
+			id = aLine.split(" ")
+			commit[:id] = id[1] if id.length>1
+		elsif !commit[:author] && aLine.start_with?("From: ") then
+			commit[:author] = aLine.slice(6, aLine.length-6)
+		elsif !commit[:date] && aLine.start_with?("Date: ") then
+			commit[:date] = aLine.slice(6, aLine.length-6)
+		elsif !commit[:title] && aLine.start_with?("Subject: ") then
+			aLine = aLine.slice(9..aLine.length)
+			pos = aLine.index("[PATCH")
+			if pos then
+				aLine = aLine.slice(pos+6..aLine.length)
+				pos = aLine.index("]")
+				aLine = aLine.slice(pos+1..aLine.length) if pos
+				aLine.strip!
+			end
+			commit[:title] = aLine
+		elsif commit[:title]!=nil && commit[:title].empty? then
+			commit[:title] = aLine
+		elsif !commit[:changedId] && aLine.start_with?("Change-Id: ") then
+			commit[:changedId] = aLine.slice(11, aLine.length-11)
+		elsif aLine == "---" && !commit[:modifiedFiles] then
+			commit[:modifiedFiles] = []
+			commit[:modifiedFilenames] = []
+		else
+			result = aLine.start_with?("diff --git")
+			if commit[:modifiedFiles].kind_of?(Array) then
+				if aLine.include?("|") then
+					commit[:modifiedFiles] << aLine
+					commit[:modifiedFilenames] << aLine.split("|").at(0).strip
+				else
+					result = true
+				end
+			end
+		end
+
+		return result
+	end
+
+	def self.parsePatchFromBody(theBody)
+		commit = {id:nil, title:nil, date:nil, author:nil, changedId:nil, modifiedFiles:nil, modifiedFilenames:[]}
+
+		theBody.each.each do |aLine|
+			aLine = StrUtil.ensureUtf8(aLine).strip #aLine.strip!
+			break if _parseMbox(commit, aLine)
+		end
+
+		return commit
+	end
 end

@@ -87,8 +87,17 @@ class TestGitUtil < Minitest::Test
 		assert_equal "# RubyGitUtil", result[:theLine]
 	end
 
-	def test_formatPatch
+	def test_formatPatchAndParsePatchFromBody
 		result = GitUtil.formatPatch(".", DEF_INITIAL_COMMIT )
 		assert_equal true, result.include?("Subject: Initial commit")
+
+		theCommit = GitUtil.parsePatchFromBody(result)
+		assert_equal DEF_INITIAL_COMMIT, theCommit[:id]
+		assert_equal "Initial commit", theCommit[:title]
+		assert_equal "Mon, 13 Feb 2023 02:54:47 +0900", theCommit[:date]
+		assert_equal "hidenorly <hidenorly@users.noreply.github.com>", theCommit[:author]
+		assert_nil theCommit[:changedId]
+		assert_equal true, theCommit[:modifiedFilenames].include?("README.md")
+		assert_equal true, theCommit[:modifiedFilenames].include?(".gitignore")
 	end
 end
