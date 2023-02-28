@@ -1,7 +1,7 @@
 require "minitest/autorun"
 require_relative "GitUtil"
-
 require_relative "ExecUtil"
+require_relative "FileUtil"
 
 class TestGitUtil < Minitest::Test
 	DEF_INITIAL_COMMIT = "614d5cdbf61c94ebc5691b7ba8499a394e2e6484" # This is for https://github.com/hidenorly/RubyGitUtil
@@ -100,4 +100,22 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, theCommit[:modifiedFilenames].include?("README.md")
 		assert_equal true, theCommit[:modifiedFilenames].include?(".gitignore")
 	end
+
+	DEF_TMP_FILE = "tmpPatch.mbox"
+	def test_parsePatch
+		result = GitUtil.formatPatch(".", DEF_INITIAL_COMMIT )
+		FileUtil.writeFile(DEF_TMP_FILE, result)
+
+		theCommit = GitUtil.parsePatch(DEF_TMP_FILE)
+		assert_equal DEF_INITIAL_COMMIT, theCommit[:id]
+		assert_equal "Initial commit", theCommit[:title]
+		assert_equal "Mon, 13 Feb 2023 02:54:47 +0900", theCommit[:date]
+		assert_equal "hidenorly <hidenorly@users.noreply.github.com>", theCommit[:author]
+		assert_nil theCommit[:changedId]
+		assert_equal true, theCommit[:modifiedFilenames].include?("README.md")
+		assert_equal true, theCommit[:modifiedFilenames].include?(".gitignore")
+
+		FileUtils.rm_f(DEF_TMP_FILE)
+	end
+
 end

@@ -347,4 +347,20 @@ class GitUtil
 
 		return commit
 	end
+
+
+	def self.parsePatch(patchPath)
+		commit = {id:nil, title:nil, date:nil, author:nil, changedId:nil, modifiedFiles:nil}
+
+		if File.exist?(patchPath) then
+			File.open(patchPath) do |file|
+				file.each_line do |aLine|
+					aLine = StrUtil.ensureUtf8(aLine).strip
+					break if _parseMbox(commit, aLine)
+				end
+			end
+		end
+
+		return commit
+	end
 end
