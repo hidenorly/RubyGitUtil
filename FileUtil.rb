@@ -378,3 +378,35 @@ class FileStream < Stream
 		@io = nil
 	end
 end
+
+
+class FileClassifier
+	FORMAT_UNKNOWN = 0
+	FORMAT_SCRIPT = 1
+	FORMAT_C = 2
+	FORMAT_JAVA = 3
+	FORMAT_JSON = 4
+
+	def self.getFileType(aLine)
+		return FORMAT_SCRIPT if aLine.end_with?(".sh") || aLine.end_with?(".rc") || aLine.end_with?(".mk") || aLine.end_with?(".te") || aLine.end_with?(".rb")|| aLine.end_with?(".py")
+		return FORMAT_C if aLine.end_with?(".c") || aLine.end_with?(".cxx") || aLine.end_with?(".cpp") || aLine.end_with?(".h") || aLine.end_with?(".hpp")
+		return FORMAT_JAVA if aLine.end_with?(".java")
+		return FORMAT_JSON if aLine.end_with?(".json") || aLine.end_with?(".bp")
+
+		return FORMAT_UNKNOWN
+	end
+
+	def self.isMeanlessLine?(aLine, format)
+		result = false
+		aLine.strip!
+
+		case format
+		when FORMAT_SCRIPT then
+			result = aLine.start_with?("#")
+		when FORMAT_C, FORMAT_JAVA, FORMAT_JSON then
+			result = aLine.start_with?("//")
+		end
+
+		return result
+	end
+end

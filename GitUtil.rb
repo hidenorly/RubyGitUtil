@@ -16,6 +16,7 @@
 
 require "shellwords"
 require_relative "ExecUtil"
+require_relative "FileUtil"
 
 class GitUtil
 	def self.isGitDirectory(gitPath)
@@ -362,5 +363,113 @@ class GitUtil
 		end
 
 		return commit
+	end
+
+
+	def self._parseModifiedFile(aLine)
+		filename = nil
+		lines = 0
+		aLine.strip!
+
+		pos = aLine.index("|")
+		if pos then
+			filename = aLine.slice(0..pos-1).strip
+			pos2 = filename.index(".../")
+			filename = filename.slice(pos2+4..filename.length) if pos2
+
+			aLine = aLine.slice(pos+1..aLine.length).strip
+			pos = aLine.index(" ")
+			lines = aLine.slice(0..pos-1).to_i if pos
+		end
+
+		return filename, lines
+	end
+
+	def self._getModifiedFiles(modfiedFiles)
+		result = []
+
+		modfiedFiles.each do |aModifiedFile|
+			filename, lines = _parseModifiedFile(aModifiedFile)
+			result << filename if lines
+		end
+
+		return result
+	end
+
+	def self.isSameModifiedFiles?(modifiedFiles1, modifiedFiles2, robustMode = false)
+		result = false
+
+		if modifiedFiles1 && modifiedFiles2 then
+			result = (modifiedFiles1 == modifiedFiles2)
+
+			if !result && robustMode then
+				files1 = _getModifiedFiles(modifiedFiles1).sort
+				files2 = _getModifiedFiles(modifiedFiles2).sort
+				result = (files1 == files2)
+			end
+		end
+
+		return result
+	end
+
+	def self._getModifiedLines(stream, robustMode)
+		addedLines = []
+		removedLines = []
+		fileType = FileClassifier::FORMAT_UNKNOWN
+
+		while !stream.eof? do
+			aLine = StrUtil.ensureUtf8(stream.readline).strip
+			fileType= FileClassifier.getFileType(aLine) if aLine.start_with?("+++ ")
+
+			addedLine = (aLine.start_with?("+") && !aLine.start_with?("+++")) ? aLine.slice(1...aLine.length-1).strip : ""
+			removedLine = (aLine.start_with?("-") && !aLine.start_with?("---")) ? aLine.slice(1...aLine.length-1).strip : ""
+
+			if robustMode then
+				addedLine = FileClassifier.isMeanlessLine?(addedLine, fileType) ? "" : addedLine
+				removedLine = FileClassifier.isMeanlessLine?(removedLine, fileType) ? "" : removedLine
+			end
+
+			addedLines << addedLine if !addedLine.empty?
+			removedLines << removedLine if !removedLine.empty?
+		end
+
+		return addedLines, removedLines
+	end
+
+
+	def self.isSamePatch?(patchStream1, patchStream2, robustMode=false)
+		result = false
+
+		patchHeader1 = parsePatchFromBody(patchStream1)
+		patchHeader2 = parsePatchFromBody(patchStream2)
+
+		# check modfied files
+		if isSameModifiedFiles?(patchHeader1[:modifiedFiles], patchHeader2[:modifiedFiles], robustMode) then
+			while !patchStream1.eof? do
+				break if StrUtil.ensureUtf8(patchStream1.readline).start_with?("diff --git")
+			end
+			while !patchStream2.eof? do
+				break if StrUtil.ensureUtf8(patchStream2.readline).start_with?("diff --git")
+			end
+
+			if !robustMode then
+				if !patchStream1.eof? && !patchStream2.eof? then
+					result = true
+					while result && !patchStream1.eof? && !patchStream2.eof? do
+						aLine1 = StrUtil.ensureUtf8(patchStream1.readline).strip
+						aLine2 = StrUtil.ensureUtf8(patchStream2.readline).strip
+						result = (aLine1 == aLine2)
+					end
+					result = false if !patchStream1.eof? || !patchStream2.eof?
+				end
+			else
+				addedLines1, removedLines1 = _getModifiedLines(patchStream1, robustMode)
+				addedLines2, removedLines2 = _getModifiedLines(patchStream2, robustMode)
+
+				result = (addedLines1.sort == addedLines2.sort) && (removedLines1.sort == removedLines2.sort)
+			end
+		end
+
+		return result
 	end
 end

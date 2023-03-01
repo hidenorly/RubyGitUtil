@@ -118,4 +118,15 @@ class TestGitUtil < Minitest::Test
 		FileUtils.rm_f(DEF_TMP_FILE)
 	end
 
+	def test_isSamePatch
+		result1 = GitUtil.formatPatch(".", DEF_INITIAL_COMMIT )
+		result2 = result1.clone()
+		result2.each{ |aLine| aLine.gsub!(DEF_INITIAL_COMMIT, "xxx") }
+		result2.each{ |aLine| aLine.gsub!("hidenorly", "hoge") }
+		stream1 = ArrayStream.new( result1 )
+		stream2 = ArrayStream.new( result2 )
+
+		assert_equal true, GitUtil.isSamePatch?( stream1, stream2 )
+		assert_equal true, GitUtil.isSamePatch?( stream1, stream2, true )
+	end
 end
