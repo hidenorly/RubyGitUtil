@@ -128,5 +128,17 @@ class TestGitUtil < Minitest::Test
 
 		assert_equal true, GitUtil.isSamePatch?( stream1, stream2 )
 		assert_equal true, GitUtil.isSamePatch?( stream1, stream2, true )
+
+		result3 = GitUtil.formatPatch(".", "HEAD" )
+		stream3 = ArrayStream.new( result3 )
+		assert_equal false, GitUtil.isSamePatch?( stream1, stream3 )
+	end
+
+	def test_containCommitOnBranch
+		assert_equal true, GitUtil.containCommitOnBranch?(".", DEF_INITIAL_COMMIT)
+	end
+
+	def test_containCommitInGit
+		assert_equal true, GitUtil.containCommitInGit?(".", DEF_INITIAL_COMMIT)
 	end
 end
