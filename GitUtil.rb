@@ -480,4 +480,100 @@ class GitUtil
 	def self.containCommitInGit?(gitPath, commitId)
 		return ExecUtil.hasResult?("git show #{commitId}", gitPath)
 	end
+
+
+	def self._parseModifiedFile(aLine)
+		filename = nil
+		lines = 0
+		aLine.strip!
+
+		pos = aLine.index("|")
+		if pos then
+			filename = aLine.slice(0..pos-1).strip
+			pos2 = filename.index(".../")
+			filename = filename.slice(pos2+4..filename.length) if pos2
+
+			aLine = aLine.slice(pos+1..aLine.length).strip
+			pos = aLine.index(" ")
+			lines = aLine.slice(0..pos-1).to_i if pos
+		end
+
+		return filename, lines
+	end
+
+	def self._getMostModifiedFile(patchBody, modifiedFiles=nil)
+		# get candidate of most modified filename
+		if !modifiedFiles then
+			thePatch = parsePatchFromBody(patchBody)
+			modifiedFiles = thePatch[:modifiedFiles]
+		end
+		mostModifiedFilename=nil
+		modifiedLines = 0
+		modifiedFiles.each do |aMofifiedFile|
+			filename, lines = _parseModifiedFile(aMofifiedFile)
+			if lines >= modifiedLines then
+				modifiedLines = lines
+				mostModifiedFilename = filename if !mostModifiedFilename
+			end
+		end
+
+		# get correct filename
+		if mostModifiedFilename then
+			patchStream = ArrayStream.new(patchBody)
+			while !patchStream.eof? do
+				break if StrUtil.ensureUtf8(patchStream.readline).start_with?("diff --git")
+			end
+			found = false
+			while !patchStream.eof? && !found do
+				aLine = StrUtil.ensureUtf8(patchStream.readline).strip
+				if aLine.index(mostModifiedFilename) then
+					candidates = aLine.split(" ")
+					candidates.each do |aCandidate|
+						if aCandidate.include?(mostModifiedFilename) then
+							pos = aCandidate.index("a/")
+							aCandidate = aCandidate.slice(pos+2..aCandidate.length) if pos
+							pos = aCandidate.index("b/")
+							aCandidate = aCandidate.slice(pos+2..aCandidate.length) if pos
+							mostModifiedFilename = aCandidate
+							found = true
+							break
+						end
+					end
+				end
+			end
+		end
+
+		return mostModifiedFilename
+	end
+
+	def self._tryMatch(gitPath, key, patchBody, gitOptions=nil, robustMode = false)
+		gitOptions = "--no-merges #{gitOptions}"
+		candidates = commitIdListOflogGrep(gitPath, key, gitOptions)
+		candidates.each do |aCandidateId|
+			theCommitBody = formatPatch(gitPath, aCandidateId)
+			return aCandidateId if isSamePatch?( ArrayStream.new(theCommitBody), ArrayStream.new(patchBody), robustMode )
+		end
+
+		return nil
+	end
+
+	def self.getCommitIdFromPatch(gitPath, patchBody, onBranch=true, skipGitContain=false, robustMode=false)
+		result = nil
+
+		thePatch = parsePatchFromBody(patchBody)
+
+		if !skipGitContain && thePatch[:id] &&
+			( (onBranch && containCommitOnBranch?(gitPath, thePatch[:id])) ||
+				(!onBranch && containCommitInGit?(gitPath, thePatch[:id])) ) then
+			result = thePatch[:id]
+		else
+			result = _tryMatch(gitPath, thePatch[:changedId], patchBody) if thePatch[:changedId]
+			result = _tryMatch(gitPath, thePatch[:title], patchBody, nil, robustMode) if !result && thePatch[:title]
+			result = _tryMatch(gitPath, nil, patchBody, "--since=\"#{thePatch[:date]}\" -- #{Shellwords.escape(_getMostModifiedFile(patchBody, thePatch[:modifiedFiles]))}", robustMode) if !result && thePatch[:date] && thePatch[:modifiedFiles] && robustMode
+			# TODO: Try another method...
+		end
+
+		return result
+	end
+
 end

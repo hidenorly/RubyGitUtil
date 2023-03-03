@@ -141,4 +141,19 @@ class TestGitUtil < Minitest::Test
 	def test_containCommitInGit
 		assert_equal true, GitUtil.containCommitInGit?(".", DEF_INITIAL_COMMIT)
 	end
+
+	def test_getCommitIdFromPatch
+		patchBody = GitUtil.formatPatch(".", DEF_INITIAL_COMMIT)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false, true)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false, true, true)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false, true, false)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false, false, true)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, false, false, false)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, false, true)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, false, false)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, true, true)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, true, false)
+	end
 end
