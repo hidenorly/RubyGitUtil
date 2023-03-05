@@ -129,7 +129,7 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, GitUtil.isSamePatch?( stream1, stream2 )
 		assert_equal true, GitUtil.isSamePatch?( stream1, stream2, true )
 
-		result3 = GitUtil.formatPatch(".", "HEAD" )
+		result3 = GitUtil.formatPatch(".", "HEAD")
 		stream3 = ArrayStream.new( result3 )
 		assert_equal false, GitUtil.isSamePatch?( stream1, stream3 )
 	end
@@ -155,5 +155,9 @@ class TestGitUtil < Minitest::Test
 		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, false, false)
 		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, true, true)
 		assert_equal DEF_INITIAL_COMMIT, GitUtil.getCommitIdFromPatch(".", patchBody, true, true, false)
+	end
+
+	def test_getBranchPoint
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getBranchPoint(".", "main", "../RubyFileUtil", "main")
 	end
 end

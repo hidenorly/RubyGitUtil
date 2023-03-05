@@ -576,4 +576,16 @@ class GitUtil
 		return result
 	end
 
+
+	def self.getBranchPoint(baseGitPath, baseBranch, targetGit, topicBranch)
+		exec_cmd =  "diff -u <(cd #{Shellwords.shellescape(targetGit)};git rev-list --first-parent #{topicBranch})"
+		exec_cmd += " <(cd #{Shellwords.shellescape(baseGitPath)}; git rev-list --first-parent #{baseBranch})"
+		exec_cmd += " | sed -ne 's/^ //p' | head -1"
+		exec_cmd += " 2>/dev/null"
+
+		result = ExecUtil.getExecResultEachLine(exec_cmd, baseGitPath)
+		result = ensureShas(result)
+		result = getTailCommitId(baseGitPath) if !result || result.empty?
+		return result
+	end
 end

@@ -33,7 +33,7 @@ class ExecUtil
 			exec_cmd = command
 			exec_cmd += " 2>&1" if enableStderr && !exec_cmd.include?(" 2>")
 
-			IO.popen(exec_cmd, "r", :chdir=>execPath) {|io|
+			IO.popen(["bash", "-c", exec_cmd], "r", :chdir=>execPath) {|io|
 				while !io.eof? do
 					if io.readline then
 						result = true
@@ -54,7 +54,7 @@ class ExecUtil
 			exec_cmd = command
 			exec_cmd += " 2>&1" if enableStderr && !exec_cmd.include?(" 2>")
 
-			IO.popen(exec_cmd, "r", :chdir=>execPath) {|io|
+			IO.popen(["bash", "-c", exec_cmd], "r", :chdir=>execPath) {|io|
 				while !io.eof? do
 					aLine = StrUtil.ensureUtf8(io.readline)
 					aLine.strip! if enableStrip
@@ -74,9 +74,9 @@ class ExecUtil
 			Timeout.timeout(timeOutSec) do
 				if File.directory?(execPath) then
 					if enableStderr then
-						pio = IO.popen(exec_cmd, STDERR=>[:child, STDOUT], :chdir=>execPath )
+						pio = IO.popen(["bash", "-c", exec_cmd], STDERR=>[:child, STDOUT], :chdir=>execPath )
 					else
-						pio = IO.popen(exec_cmd, :chdir=>execPath )
+						pio = IO.popen(["bash", "-c", exec_cmd], :chdir=>execPath )
 					end
 					if pio && !pio.eof?then
 						aLine = StrUtil.ensureUtf8(pio.read)
