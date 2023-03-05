@@ -588,4 +588,22 @@ class GitUtil
 		result = getTailCommitId(baseGitPath) if !result || result.empty?
 		return result
 	end
+
+	def self.checkout(gitPath, shaOrBranch, createBranch=false, gitOptions=nil)
+		exec_cmd = "git checkout"
+		exec_cmd += " -b" if createBranch
+		exec_cmd += " #{shaOrBranch}"
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, gitPath)
+	end
+
+	def self.undoCheckout(gitPath, gitOptions=nil)
+		exec_cmd = "git switch -"
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, gitPath)
+	end
 end

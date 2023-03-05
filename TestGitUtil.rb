@@ -160,4 +160,15 @@ class TestGitUtil < Minitest::Test
 	def test_getBranchPoint
 		assert_equal DEF_INITIAL_COMMIT, GitUtil.getBranchPoint(".", "main", "../RubyFileUtil", "main")
 	end
+
+	def test_checkoutAndUndoCheckout
+		# testcase for sha1 specified checkout
+		headId = GitUtil.getHeadCommitId(".")
+		GitUtil.checkout(".", DEF_INITIAL_COMMIT)
+		assert_equal DEF_INITIAL_COMMIT, GitUtil.getHeadCommitId(".")
+		GitUtil.undoCheckout(".")
+		assert_equal headId, GitUtil.getHeadCommitId(".")
+
+		# TODO: testcase for checkout with branch
+	end
 end
