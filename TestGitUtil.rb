@@ -171,4 +171,19 @@ class TestGitUtil < Minitest::Test
 
 		# TODO: testcase for checkout with branch
 	end
+
+	def test_am_apply
+		result = GitUtil.formatPatch(".", "HEAD")
+		FileUtil.writeFile(DEF_TMP_FILE, result)
+
+		assert_equal false, GitUtil.am(".", DEF_TMP_FILE)
+		GitUtil.amAbort(".")
+
+		assert_equal false, GitUtil.apply(".", DEF_TMP_FILE)
+		GitUtil.amAbort(".")
+
+		#TODO: test case for applyable case... (another test git repository is necessary)
+
+		FileUtils.rm_f(DEF_TMP_FILE)
+	end
 end

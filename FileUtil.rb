@@ -233,8 +233,10 @@ class FileUtil
 	end
 
 	def self.appendLineToFile(path, line)
-		open(path, "a") do |f|
-			f.puts line
+		if path then
+			open(path, "a") do |f|
+				f.puts line.to_s
+			end
 		end
 	end
 end
@@ -394,6 +396,50 @@ class FileClassifier
 		return FORMAT_JSON if aLine.end_with?(".json") || aLine.end_with?(".bp")
 
 		return FORMAT_UNKNOWN
+	end
+
+	DEF_BINARY_EXTS = [
+		".apk",
+		".jar",
+		".so",
+		".ko",
+		".zip",
+		".tgz",
+		".gz",
+		".xz",
+		".png",
+		".jpg",
+		".dng",
+		".bmp",
+		".img",
+		".bin",
+		".mpg",
+		".mov",
+		".mp4",
+		".mp3",
+		".aac",
+		".amr",
+		".mkv",
+		".xls",
+		".xlsx",
+		".docx",
+		".ppt",
+		".pptx",
+		".pdf",
+		".vsd",
+		".raw",
+		".a",
+		".pyc",
+		".lib"
+	]
+
+	def self.isBinaryFile(ext)
+		ext.downcase!
+		pos = ext.rindex(".")
+		if pos then
+			ext = ext.slice(pos, ext.length)
+		end
+		return DEF_BINARY_EXTS.include?(ext)
 	end
 
 	def self.isMeanlessLine?(aLine, format)

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require "open3"
 require "shellwords"
 require_relative "ExecUtil"
 require_relative "FileUtil"
@@ -295,6 +296,47 @@ class GitUtil
 		exec_cmd += " 2>/dev/null" if !exec_cmd.include?("2>")
 
 		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
+	end
+
+	def self.amAbort(gitPath)
+		ExecUtil.execCmd("git am --abort", gitPath)
+	end
+
+	def self.apply(gitPath, aPatchPath, gitOptions="", logFile=nil, verbose=false, abortIfFail=true)
+		return am(gitPath, aPatchPath, gitOptions, logFile, verbose, false, abortIfFail)
+	end
+
+	def self.am(gitPath, aPatchPath, gitOptions="", logFile=nil, verbose=false, enableCommit=true, abortIfFail=true)
+		result = File.directory?(gitPath)
+
+		if result then
+			exec_cmd = enableCommit ? "git am" : "git apply"
+			exec_cmd += " -3 #{gitOptions} #{Shellwords.shellescape(aPatchPath)}"
+			exec_cmd += " >> #{logFile}" if logFile
+
+			errMsg = ""
+			Open3.popen3(exec_cmd, :chdir=>gitPath) do |i, o, e, w|
+				while !e.eof? do
+					aLine = StrUtil.ensureUtf8(e.readline).strip
+					if aLine.start_with?("No changes -- Patch already applied.") then
+						# Ok
+					elsif aLine.start_with?("error: ") || aLine.start_with?("fatal: ") then
+						# failed
+						errMsg="patch failed: #{aPatchPath}"
+						puts errMsg if verbose
+						amAbort(gitPath) if abortIfFail
+						result = false
+					end
+						
+				end
+				i.close()
+				o.close()
+				e.close()
+			end
+			FileUtil.appendLineToFile(logFile, errMsg) if errMsg && !result
+		end
+
+		return result
 	end
 
 	def self._parseMbox(commit, aLine)
@@ -588,6 +630,7 @@ class GitUtil
 		result = getTailCommitId(baseGitPath) if !result || result.empty?
 		return result
 	end
+
 
 	def self.checkout(gitPath, shaOrBranch, createBranch=false, gitOptions=nil)
 		exec_cmd = "git checkout"
