@@ -186,4 +186,9 @@ class TestGitUtil < Minitest::Test
 
 		FileUtils.rm_f(DEF_TMP_FILE)
 	end
+
+	def test_cherryPick
+		assert_equal true, GitUtil.cherryPick(".", "HEAD")
+		GitUtil.cherryPickAbort(".")
+	end
 end
