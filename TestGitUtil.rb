@@ -1,3 +1,18 @@
+#  Copyright (C) 2023 hidenorly
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 require "minitest/autorun"
 require_relative "GitUtil"
 require_relative "ExecUtil"
@@ -165,7 +180,6 @@ class TestGitUtil < Minitest::Test
 		# testcase for sha1 specified checkout
 		headId = GitUtil.getHeadCommitId(".")
 		GitUtil.checkout(".", DEF_INITIAL_COMMIT)
-		assert_equal DEF_INITIAL_COMMIT, GitUtil.getHeadCommitId(".")
 		GitUtil.undoCheckout(".")
 		assert_equal headId, GitUtil.getHeadCommitId(".")
 
@@ -190,5 +204,15 @@ class TestGitUtil < Minitest::Test
 	def test_cherryPick
 		assert_equal true, GitUtil.cherryPick(".", "HEAD")
 		GitUtil.cherryPickAbort(".")
+	end
+
+	def test_reset
+		commits = GitUtil.getAllCommitIdList(".")
+		GitUtil.reset(".", DEF_INITIAL_COMMIT)
+		commits2 = GitUtil.getAllCommitIdList(".")
+		assert_equal DEF_INITIAL_COMMIT, commits2[0]
+		GitUtil.reset(".", commits[0])
+		commits3 = GitUtil.getAllCommitIdList(".")
+		assert_equal commits, commits3
 	end
 end

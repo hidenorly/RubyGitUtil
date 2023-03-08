@@ -90,7 +90,7 @@ class GitUtil
 
 	def self.getHeadCommitId(gitPath)
 		result = nil
-		exec_cmd = "git rev-list HEAD | tail -n 1"
+		exec_cmd = "git rev-list HEAD | head -n 1"
 		exec_cmd += " 2>/dev/null"
 
 		result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath)
@@ -682,5 +682,14 @@ class GitUtil
 		end
 
 		return result
+	end
+
+	def self.reset(gitPath, sha1, gitOptions=nil)
+		exec_cmd = "git reset"
+		exec_cmd += " #{sha1}"
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, gitPath)
 	end
 end
