@@ -215,4 +215,20 @@ class TestGitUtil < Minitest::Test
 		commits3 = GitUtil.getAllCommitIdList(".")
 		assert_equal commits, commits3
 	end
+
+	def test_revert
+		commits = GitUtil.getAllCommitIdList(".")
+		result = GitUtil.revert(".", DEF_INITIAL_COMMIT)
+		if !result then
+			commits2 = GitUtil.getAllCommitIdList(".")
+			assert_equal commits, commits2
+			GitUtil.revertAbort(".")
+			commits2 = GitUtil.getAllCommitIdList(".")
+			assert_equal commits, commits2
+		end
+		GitUtil.reset(".", commits[0], "--merge")
+		commits3 = GitUtil.getAllCommitIdList(".")
+		assert_equal commits, commits3
+	end
+
 end

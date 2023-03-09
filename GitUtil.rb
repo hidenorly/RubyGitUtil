@@ -692,4 +692,39 @@ class GitUtil
 
 		ExecUtil.execCmd(exec_cmd, gitPath)
 	end
+
+
+	def self.revertAbort(gitPath, gitOptions=nil)
+		ExecUtil.execCmd("git revert --abort", gitPath)
+	end
+
+	def self.revert(gitPath, commitId, gitOptions=nil, logFile=nil, verbose=false, abortIfFail=true)
+		result = File.directory?(gitPath)
+
+		if result then
+			exec_cmd = "git revert #{commitId} --no-edit"
+			exec_cmd += " >> #{logFile}" if logFile
+
+			errMsg = ""
+			Open3.popen3(exec_cmd, :chdir=>gitPath) do |i, o, e, w|
+				while !e.eof? do
+					aLine = StrUtil.ensureUtf8(e.readline).strip
+					if aLine.start_with?("error:") then
+						# failed
+						errMsg = "revert failed: #{commitId}"
+						puts errMsg if verbose
+						revertAbort(gitPath) if abortIfFail
+						result = false
+					end
+						
+				end
+				i.close()
+				o.close()
+				e.close()
+			end
+			FileUtil.appendLineToFile(logFile, errMsg) if errMsg && !result
+		end
+
+		return result
+	end
 end
