@@ -727,4 +727,13 @@ class GitUtil
 
 		return result
 	end
+
+	def self.archive(gitPath, outputPath, gitOptions=nil, sha1="HEAD")
+		exec_cmd = "git archive -o #{Shellwords.shellescape(outputPath)}"
+		exec_cmd += " #{sha1}" if sha1
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, gitPath)
+	end
 end

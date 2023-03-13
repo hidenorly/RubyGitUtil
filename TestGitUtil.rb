@@ -231,4 +231,24 @@ class TestGitUtil < Minitest::Test
 		assert_equal commits, commits3
 	end
 
+	DEF_TEMP_ARCHIVE="archive.tar"
+	def test_archive
+		GitUtil.archive(".", DEF_TEMP_ARCHIVE)
+		result = ExecUtil.getExecResultEachLine("tar -tf #{DEF_TEMP_ARCHIVE}")
+=begin
+		files = FileUtil.getRegExpFilteredFiles(".", nil)
+		_files = []
+		files.each do | aFile |
+			_files << FileUtil.getFilenameFromPath(aFile)
+		end
+=end
+		_files = GitUtil.getFilesWithGitOpts(".")
+		isSuccess = true
+		result.each do |aFile|
+			isSuccess = _files.include?(aFile)
+			break if !isSuccess
+		end
+		assert_equal true, isSuccess
+		FileUtils.rm(DEF_TEMP_ARCHIVE)
+	end
 end
