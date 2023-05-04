@@ -736,4 +736,20 @@ class GitUtil
 
 		ExecUtil.execCmd(exec_cmd, gitPath)
 	end
+
+	def self.remoteAdd(dstGitPath, repoName, srcGitPath, gitOptions=nil)
+		exec_cmd = "git remote add #{Shellwords.shellescape(repoName)} #{Shellwords.shellescape(srcGitPath)}"
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, dstGitPath)
+	end
+
+	def self.remoteRemove(gitPath, repoName, gitOptions=nil)
+		exec_cmd = "git remote rm #{Shellwords.shellescape(repoName)}"
+		exec_cmd += " #{gitOptions}" if gitOptions
+		exec_cmd += " 2>&1"
+
+		ExecUtil.execCmd(exec_cmd, gitPath)
+	end
 end
