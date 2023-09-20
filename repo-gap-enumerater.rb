@@ -129,7 +129,7 @@ options = {
 opt_parser = OptionParser.new do |opts|
 	opts.banner = "Usage: -s sourceRepoDir -t targetRepoDir"
 
-	opts.on("-s", "--source=", "Specify source repo dir. if you want to exec as delta/new files") do |src|
+	opts.on("-s", "--source=", "Specify source repo dir.") do |src|
 		options[:srcDir] = src
 	end
 
