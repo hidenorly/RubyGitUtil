@@ -2,7 +2,7 @@
 
 # repo-gap-enumerater.rb
 
-See [background explanation](Downstream_development.pdf')
+See [background explanation](Downstream_development.pdf)
 
 Enumerate the gapped commits as .patch between the sourceRepoDir and the targetRepoDir
 
