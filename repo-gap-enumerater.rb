@@ -145,7 +145,7 @@ opt_parser = OptionParser.new do |opts|
 		options[:gitPath] = gitPath
 	end
 
-	opts.on("-o", "--output=", "Specify output path )") do |output|
+	opts.on("-o", "--output=", "Specify patch output path") do |output|
 		options[:output] = output
 	end
 

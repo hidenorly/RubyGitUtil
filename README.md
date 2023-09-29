@@ -2,16 +2,19 @@
 
 # repo-gap-enumerater.rb
 
+See [background explanation](Downstream_development.pdf')
+
 Enumerate the gapped commits as .patch between the sourceRepoDir and the targetRepoDir
 
 ```
+ruby repo-gap-enumerater.rb --help
 Usage: -s sourceRepoDir -t targetRepoDir
-    -s, --source=                    Specify source repo dir. if you want to exec as delta/new files
+    -s, --source=                    Specify source repo dir.
         --sourceGitOpt=
                                      Specify gitOpt for source repo dir.
     -t, --target=                    Specify target repo dir.
     -g, --gitPath=                   Specify target git path (regexp) if you want to limit to execute the git only
-    -o, --output=                    Specify output path )
+    -o, --output=                    Specify patch output path
         --manifestFile=
                                      Specify manifest file (default:manifest.xml)
     -j, --numOfThreads=              Specify number of threads (default:8)
