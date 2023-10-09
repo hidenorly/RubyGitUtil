@@ -52,6 +52,7 @@ options = {
 	:verbose => false,
 	:patchPath => nil,
 	:repoPath => nil,
+	:outputSection => "id|date|author|changedId|title",
 	:numOfThreads => TaskManagerAsync.getNumberOfProcessor()
 }
 
@@ -67,6 +68,10 @@ opt_parser = OptionParser.new do |opts|
 	end
 	opts.on("-m", "--manifestFile=", "Specify manifest file (default:#{options[:manifestFile]})") do |manifestFile|
 		options[:manifestFile] = manifestFile
+	end
+
+	opts.on("-o", "--outputSection=", "Specify output section (#{options[:outputSection]})") do |outputSection|
+		options[:outputSection] = outputSection
 	end
 
 	opts.on("-j", "--numOfThreads=", "Specify number of threads (default:#{options[:numOfThreads]})") do |numOfThreads|
@@ -115,10 +120,9 @@ result = result.sort
 reporter = MarkdownReporter.new( options[:reportOutPath] )
 
 result.each do | path, aResult |
+	commits = []
 	aResult.each do | aPatch, aCommit |
-		#reporter.println( "#{path},#{aPatch},#{aCommit[:id]},#{aCommit[:date]},#{aCommit[:author]},#{aCommit[:changedId]},#{aCommit[:title]}" )
-		reporter.println( "" )
-		reporter.titleOut( aPatch )
-		reporter.report( aCommit )
+		commits << aCommit
 	end
+	reporter.report( commits, options[:outputSection] )
 end
