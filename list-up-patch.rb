@@ -120,6 +120,8 @@ result = result.sort
 reporter = MarkdownReporter.new( options[:reportOutPath] )
 
 result.each do | path, aResult |
+	reporter.println( "" )
+	reporter.titleOut( path )
 	commits = []
 	aResult.each do | aPatch, aCommit |
 		commits << aCommit

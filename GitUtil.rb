@@ -609,7 +609,7 @@ class GitUtil
 				(!onBranch && containCommitInGit?(gitPath, thePatch[:id])) ) then
 			result = thePatch[:id]
 		else
-			result = _tryMatch(gitPath, thePatch[:changedId], patchBody) if thePatch[:changedId]
+			result = _tryMatch(gitPath, thePatch[:changedId], patchBody, nil, robustMode) if thePatch[:changedId]
 			result = _tryMatch(gitPath, thePatch[:title], patchBody, nil, robustMode) if !result && thePatch[:title]
 			result = _tryMatch(gitPath, nil, patchBody, "--since=\"#{thePatch[:date]}\" -- #{Shellwords.escape(_getMostModifiedFile(patchBody, thePatch[:modifiedFiles]))}", robustMode) if !result && thePatch[:date] && thePatch[:modifiedFiles] && robustMode
 			# TODO: Try another method...

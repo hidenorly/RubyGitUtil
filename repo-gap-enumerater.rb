@@ -52,7 +52,7 @@ end
 
 
 class ExecExcludePatch < TaskAsync
-	def initialize(srcDir, srcGitPath, dstDir, dstGitPath, patchDir, verbose, robustMode=True)
+	def initialize(srcDir, srcGitPath, dstDir, dstGitPath, patchDir, verbose, robustMode=true)
 		super("ExecExcludePatch::#{srcGitPath}")
 		@git = srcGitPath
 		@srcGitPath = srcDir+"/"+srcGitPath
