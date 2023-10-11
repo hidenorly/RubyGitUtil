@@ -52,7 +52,7 @@ end
 
 
 class ExecExcludePatch < TaskAsync
-	def initialize(srcDir, srcGitPath, dstDir, dstGitPath, patchDir, verbose, robustMode=true)
+	def initialize(srcDir, srcGitPath, dstDir, dstGitPath, patchDir, verbose, robustMode=true, matchKeyword=nil)
 		super("ExecExcludePatch::#{srcGitPath}")
 		@git = srcGitPath
 		@srcGitPath = srcDir+"/"+srcGitPath
@@ -64,6 +64,7 @@ class ExecExcludePatch < TaskAsync
 		end
 		@_commitIDs={}
 		@robustMode = robustMode
+		@matchKeyword = matchKeyword
 	end
 
 	def _createCache(gitPath)
@@ -81,8 +82,8 @@ class ExecExcludePatch < TaskAsync
 
 	def _isIncludedOnBranch?(gitPath, aPatchPath)
 		patchBody = FileUtil.readFileAsArray(aPatchPath)
-		targetCommitId = GitUtil.getCommitIdFromPatch(gitPath, patchBody, true, true, @robustMode)
-		return targetCommitId ? true : false
+		targetCommitId = GitUtil.getCommitIdFromPatch(gitPath, patchBody, true, true, @robustMode, @matchKeyword)
+		return _containCommitOnBranch?(targetCommitId)
 	end
 
 	def execute
@@ -123,6 +124,7 @@ options = {
 	:dstGitOpt => "",
 	:gitPath => nil,
 	:output => ".",
+	:matchKeyword => nil,
 	:numOfThreads => TaskManagerAsync.getNumberOfProcessor()
 }
 
@@ -147,6 +149,10 @@ opt_parser = OptionParser.new do |opts|
 
 	opts.on("-o", "--output=", "Specify patch output path") do |output|
 		options[:output] = output
+	end
+
+	opts.on("-m", "--matchKeyword=", "Specify match keyword level (regexp)). The extract matched key word from commit message and exclude if the matched commit exists") do |matchKeyword|
+		options[:matchKeyword] = matchKeyword
 	end
 
 	opts.on("", "--manifestFile=", "Specify manifest file (default:#{options[:manifestFile]})") do |manifestFile|
@@ -196,7 +202,7 @@ taskMan.finalize()
 taskMan = ThreadPool.new( options[:numOfThreads].to_i )
 
 targetGits.each do | srcGitPath, dstGitPath |
-	taskMan.addTask( ExecExcludePatch.new(options[:dstDir], dstGitPath, options[:srcDir], srcGitPath, options[:output], options[:verbose], true) )
+	taskMan.addTask( ExecExcludePatch.new(options[:dstDir], dstGitPath, options[:srcDir], srcGitPath, options[:output], options[:verbose], true, options[:matchKeyword]) )
 end
 
 taskMan.executeAll()

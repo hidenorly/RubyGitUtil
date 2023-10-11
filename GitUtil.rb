@@ -599,7 +599,33 @@ class GitUtil
 		return nil
 	end
 
-	def self.getCommitIdFromPatch(gitPath, patchBody, onBranch=true, skipGitContain=false, robustMode=false)
+	def self._tryMatchKeyword(gitPath, title, matchKeyword=nil)
+		if matchKeyword then
+			matchRegKey = Regexp.new(matchKeyword)
+			gitOptions = "--no-merges"
+			keys = title.to_s.scan(matchRegKey)
+			if keys then
+				keys.each do |aKeys|
+					if aKeys then
+						aKeys = [aKeys] if aKeys.kind_of?(String)
+						aKeys.each do |key|
+							candidates = commitIdListOflogGrep(gitPath, key, gitOptions)
+							candidates.each do |aCandidateId|
+								#theCommitBody = formatPatch(gitPath, aCandidateId)
+								#thePatch = parsePatchFromBody(theCommitBody)
+								puts "#{matchKeyword}:#{key}:#{aCandidateId}"#{thePatch[:title]}"
+								return aCandidateId if aCandidateId #thePatch[:title].to_s.match?(key.to_s)
+							end
+						end
+					end
+				end
+			end
+		end
+
+		return nil
+	end
+
+	def self.getCommitIdFromPatch(gitPath, patchBody, onBranch=true, skipGitContain=false, robustMode=false, matchKeyword=nil)
 		result = nil
 
 		thePatch = parsePatchFromBody(patchBody)
@@ -612,6 +638,7 @@ class GitUtil
 			result = _tryMatch(gitPath, thePatch[:changedId], patchBody, nil, robustMode) if thePatch[:changedId]
 			result = _tryMatch(gitPath, thePatch[:title], patchBody, nil, robustMode) if !result && thePatch[:title]
 			result = _tryMatch(gitPath, nil, patchBody, "--since=\"#{thePatch[:date]}\" -- #{Shellwords.escape(_getMostModifiedFile(patchBody, thePatch[:modifiedFiles]))}", robustMode) if !result && thePatch[:date] && thePatch[:modifiedFiles] && robustMode
+			result = _tryMatchKeyword(gitPath, thePatch[:title], matchKeyword) if !result & robustMode & matchKeyword
 			# TODO: Try another method...
 		end
 
