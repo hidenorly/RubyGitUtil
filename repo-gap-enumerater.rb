@@ -83,7 +83,9 @@ class ExecExcludePatch < TaskAsync
 	def _isIncludedOnBranch?(gitPath, aPatchPath)
 		patchBody = FileUtil.readFileAsArray(aPatchPath)
 		targetCommitId = GitUtil.getCommitIdFromPatch(gitPath, patchBody, true, true, @robustMode, @matchKeyword)
-		return _containCommitOnBranch?(targetCommitId)
+		result = _containCommitOnBranch?(targetCommitId)
+		puts "Not found #{targetCommitId} on #{gitPath}" if !result && targetCommitId
+		return result
 	end
 
 	def execute
@@ -110,6 +112,21 @@ class ExecExcludePatch < TaskAsync
 		_doneTask()
 	end
 end
+
+
+class ExecCreateAndExcludePatch < TaskAsync
+	def initialize(srcDir, gitPath, gitOption, patchDir, srcDir2, srcGitPath2, dstDir2, dstGitPath2, patchDir2, verbose, robustMode=true, matchKeyword=nil)
+		@patchCreationTask = ExecCommit2Patch.new(srcDir, gitPath, gitOption, patchDir, verbose)
+		@patchExclusionTask = ExecExcludePatch.new(srcDir2, srcGitPath2, dstDir2, dstGitPath2, patchDir2, verbose, robustMode, matchKeyword)
+	end
+
+	def execute
+		@patchCreationTask.execute()
+		@patchExclusionTask.execute()
+		_doneTask()
+	end
+end
+
 
 
 #---- main --------------------------
@@ -188,21 +205,13 @@ if options[:srcDir] && options[:dstDir] then
 	targetGits = matched
 end
 
-# step - 1 : convert commit to .patch
 taskMan = ThreadPool.new( options[:numOfThreads].to_i )
 
 targetGits.each do | srcGitPath, dstGitPath |
-	taskMan.addTask( ExecCommit2Patch.new(options[:srcDir], srcGitPath, options[:srcGitOpt], options[:output], options[:verbose]) )
-end
-
-taskMan.executeAll()
-taskMan.finalize()
-
-# step - 2 : exclude existing commits in dstGitPath
-taskMan = ThreadPool.new( options[:numOfThreads].to_i )
-
-targetGits.each do | srcGitPath, dstGitPath |
-	taskMan.addTask( ExecExcludePatch.new(options[:dstDir], dstGitPath, options[:srcDir], srcGitPath, options[:output], options[:verbose], true, options[:matchKeyword]) )
+	taskMan.addTask( ExecCreateAndExcludePatch.new(
+		options[:srcDir], srcGitPath, options[:srcGitOpt], options[:output],
+		options[:dstDir], dstGitPath, options[:srcDir], srcGitPath, options[:output], options[:verbose], true, options[:matchKeyword]
+	))
 end
 
 taskMan.executeAll()

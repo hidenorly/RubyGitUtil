@@ -381,11 +381,16 @@ class GitUtil
 	end
 
 	def self.parsePatchFromBody(theBody)
-		commit = {id:nil, title:nil, date:nil, author:nil, changedId:nil, modifiedFiles:nil, modifiedFilenames:[]}
+		commit = {id:nil, title:nil, date:nil, author:nil, changedId:nil, modifiedFiles:nil, modifiedFilenames:[], message:[]}
 
+		isHeaderFound=false
 		theBody.each.each do |aLine|
 			aLine = StrUtil.ensureUtf8(aLine).strip #aLine.strip!
+			isTitleFound = !commit[:title].to_s.empty?
 			break if _parseMbox(commit, aLine)
+			isHeaderFound |= (!isTitleFound && !commit[:title].to_s.empty?)
+			isHeaderFound = false if aLine.start_with?("---")
+			commit[:message] << aLine if isHeaderFound && aLine
 		end
 
 		return commit
@@ -393,18 +398,8 @@ class GitUtil
 
 
 	def self.parsePatch(patchPath)
-		commit = {id:nil, title:nil, date:nil, author:nil, changedId:nil, modifiedFiles:nil}
-
-		if File.exist?(patchPath) then
-			File.open(patchPath) do |file|
-				file.each_line do |aLine|
-					aLine = StrUtil.ensureUtf8(aLine).strip
-					break if _parseMbox(commit, aLine)
-				end
-			end
-		end
-
-		return commit
+		theBody = FileUtil.readFileAsArray(patchPath)
+		return parsePatchFromBody(theBody)
 	end
 
 
@@ -599,11 +594,11 @@ class GitUtil
 		return nil
 	end
 
-	def self._tryMatchKeyword(gitPath, title, matchKeyword=nil)
+	def self._tryMatchKeyword(gitPath, message, matchKeyword=nil)
 		if matchKeyword then
 			matchRegKey = Regexp.new(matchKeyword)
 			gitOptions = "--no-merges"
-			keys = title.to_s.scan(matchRegKey)
+			keys = message.to_s.scan(matchRegKey)
 			if keys then
 				keys.each do |aKeys|
 					if aKeys then
@@ -611,10 +606,8 @@ class GitUtil
 						aKeys.each do |key|
 							candidates = commitIdListOflogGrep(gitPath, key, gitOptions)
 							candidates.each do |aCandidateId|
-								#theCommitBody = formatPatch(gitPath, aCandidateId)
-								#thePatch = parsePatchFromBody(theCommitBody)
-								puts "#{matchKeyword}:#{key}:#{aCandidateId}"#{thePatch[:title]}"
-								return aCandidateId if aCandidateId #thePatch[:title].to_s.match?(key.to_s)
+								puts "#{key}:#{gitPath}:#{aCandidateId}:#{message.slice(0,50)}"
+								return aCandidateId if containCommitOnBranch?(gitPath, aCandidateId)
 							end
 						end
 					end
@@ -638,7 +631,7 @@ class GitUtil
 			result = _tryMatch(gitPath, thePatch[:changedId], patchBody, nil, robustMode) if thePatch[:changedId]
 			result = _tryMatch(gitPath, thePatch[:title], patchBody, nil, robustMode) if !result && thePatch[:title]
 			result = _tryMatch(gitPath, nil, patchBody, "--since=\"#{thePatch[:date]}\" -- #{Shellwords.escape(_getMostModifiedFile(patchBody, thePatch[:modifiedFiles]))}", robustMode) if !result && thePatch[:date] && thePatch[:modifiedFiles] && robustMode
-			result = _tryMatchKeyword(gitPath, thePatch[:title], matchKeyword) if !result & robustMode & matchKeyword
+			result = _tryMatchKeyword(gitPath, thePatch[:message].join(" "), matchKeyword) if !result & robustMode & matchKeyword
 			# TODO: Try another method...
 		end
 
