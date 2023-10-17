@@ -82,7 +82,7 @@ class ExecExcludePatch < TaskAsync
 
 	def _isIncludedOnBranch?(gitPath, aPatchPath)
 		patchBody = FileUtil.readFileAsArray(aPatchPath)
-		targetCommitId = GitUtil.getCommitIdFromPatch(gitPath, patchBody, true, true, @robustMode, @matchKeyword)
+		targetCommitId = GitUtil.getCommitIdFromPatch(gitPath, patchBody, true, true, @robustMode, @matchKeyword, @verbose)
 		result = _containCommitOnBranch?(targetCommitId)
 		puts "Not found #{targetCommitId} on #{gitPath}" if !result && targetCommitId
 		return result

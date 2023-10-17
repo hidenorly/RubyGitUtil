@@ -594,7 +594,7 @@ class GitUtil
 		return nil
 	end
 
-	def self._tryMatchKeyword(gitPath, message, matchKeyword=nil)
+	def self._tryMatchKeyword(gitPath, message, matchKeyword=nil, verbose=false)
 		if matchKeyword then
 			matchRegKey = Regexp.new(matchKeyword)
 			gitOptions = "--no-merges"
@@ -607,11 +607,11 @@ class GitUtil
 							candidates = commitIdListOflogGrep(gitPath, key, gitOptions)
 							candidates.each do |aCandidateId|
 								isFoundOnTheBranch = containCommitOnBranch?(gitPath, aCandidateId)
-								puts "grep found but not on the branch:#{key}:#{gitPath}:#{aCandidateId}:#{message.slice(0,50)}" if !isFoundOnTheBranch
+								puts "grep found but not on the branch:#{key}:#{gitPath}:#{aCandidateId}:#{message.slice(0,50)}" if verbose && !isFoundOnTheBranch
 								return aCandidateId if isFoundOnTheBranch
 							end
 						end
-						puts "#{aKeys} is not found on #{gitPath}"
+						puts "#{aKeys} is not found on #{gitPath}" if verbose
 					end
 				end
 			end
@@ -620,7 +620,7 @@ class GitUtil
 		return nil
 	end
 
-	def self.getCommitIdFromPatch(gitPath, patchBody, onBranch=true, skipGitContain=false, robustMode=false, matchKeyword=nil)
+	def self.getCommitIdFromPatch(gitPath, patchBody, onBranch=true, skipGitContain=false, robustMode=false, matchKeyword=nil, verbose=false)
 		result = nil
 
 		thePatch = parsePatchFromBody(patchBody)
@@ -632,7 +632,7 @@ class GitUtil
 		else
 			result = _tryMatch(gitPath, thePatch[:changedId], patchBody, nil, robustMode) if thePatch[:changedId]
 			result = _tryMatch(gitPath, thePatch[:title], patchBody, nil, robustMode) if !result && thePatch[:title]
-			result = _tryMatchKeyword(gitPath, thePatch[:message].join(" "), matchKeyword) if !result & robustMode & matchKeyword
+			result = _tryMatchKeyword(gitPath, thePatch[:message].join(" "), matchKeyword, verbose) if !result & robustMode & matchKeyword
 			result = _tryMatch(gitPath, nil, patchBody, "--since=\"#{thePatch[:date]}\" -- #{Shellwords.escape(_getMostModifiedFile(patchBody, thePatch[:modifiedFiles]))}", robustMode) if !result && thePatch[:date] && thePatch[:modifiedFiles] && robustMode
 			# TODO: Try another method...
 		end
