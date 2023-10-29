@@ -7,7 +7,6 @@ See [background explanation](Downstream_development.pdf)
 Enumerate the gapped commits as .patch between the sourceRepoDir and the targetRepoDir
 
 ```
-ruby repo-gap-enumerater.rb --help
 Usage: -s sourceRepoDir -t targetRepoDir
     -s, --source=                    Specify source repo dir.
         --sourceGitOpt=
@@ -15,6 +14,7 @@ Usage: -s sourceRepoDir -t targetRepoDir
     -t, --target=                    Specify target repo dir.
     -g, --gitPath=                   Specify target git path (regexp) if you want to limit to execute the git only
     -o, --output=                    Specify patch output path
+    -m, --matchKeyword=              Specify match keyword level (regexp)). The extract matched key word from commit message and exclude if the matched commit exists
         --manifestFile=
                                      Specify manifest file (default:manifest.xml)
     -j, --numOfThreads=              Specify number of threads (default:8)
