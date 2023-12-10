@@ -251,4 +251,12 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, isSuccess
 		FileUtils.rm(DEF_TEMP_ARCHIVE)
 	end
+
+	def test_isCommitExistWithFileAndGitOpts
+		assert_equal true, GitUtil.getFilesWithGitOpts(".", "--author=twitte.harold@gmail.com").include?("GitUtil.rb")
+	end
+
+	def test_isCommitExistWithFileAndGitOpts
+		assert_equal true, GitUtil.isCommitExistWithFileAndGitOpts(".", "GitUtil.rb")
+	end
 end
