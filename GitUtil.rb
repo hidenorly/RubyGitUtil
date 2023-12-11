@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require "set"
 require "open3"
 require "shellwords"
 require_relative "ExecUtil"
@@ -256,9 +257,75 @@ class GitUtil
 	end
 
 	def self.isCommitExistWithFileAndGitOpts(gitPath, filename, gitOpt = "")
-		exec_cmd = "git log --pretty=\"%h\" #{gitOpt ? gitOpt : ""}  -- #{filename}"
+		exec_cmd = "git log --pretty=\"%h\" #{gitOpt ? gitOpt : ""}  -- #{Shellwords.escape(filename)}"
+		return ExecUtil.hasResult?(exec_cmd, gitPath, false)
+	end
+
+	STATUS_CHANGES_TO_BE_COMMITED = 0
+	STATUS_CHANGES_TO_BE_COMMITED_IDENTIFIER = "Changes to be committed:"
+
+	STATUS_CHANGES_NOT_STAGED = 1
+	STATUS_CHANGES_NOT_STAGED_IDENTIFIER = "Changes not staged for commit:"
+	STATUS_CHANGES_MODIFIED = "modified:"
+	STATUS_CHANGES_MODIFIED_LEN = STATUS_CHANGES_MODIFIED.length
+
+	STATUS_UNTRACKED = 2
+	STATUS_UNTRACKED_IDENTIFIER = "Untracked files:"
+
+	STATUS_IGNORE_OTHERS = [
+		'(use "git restore --staged <file>..." to unstage)',
+		'(use "git add <file>..." to update what will be committed)',
+		'(use "git add <file>..." to include in what will be committed)',
+		'(use "git restore <file>..." to discard changes in working directory)',
+		'no changes added to commit (use "git add" and/or "git commit -a")'
+	]
+
+	def self.status(gitPath, gitOpt = "")
+		result_to_be_commited = []
+		result_changes_not_staged = []
+		result_untracked = []
+
+		exec_cmd = "git status #{gitOpt ? gitOpt : ""}"
 		result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath, false, true, true)
-		return !result.empty?
+
+		mode = STATUS_CHANGES_TO_BE_COMMITED
+		result.each do |aLine|
+			aLine = aLine.to_s.strip
+			if aLine == STATUS_CHANGES_TO_BE_COMMITED_IDENTIFIER then
+				mode = STATUS_CHANGES_TO_BE_COMMITED
+			elsif aLine == STATUS_CHANGES_NOT_STAGED_IDENTIFIER then
+				mode = STATUS_CHANGES_NOT_STAGED
+			elsif aLine == STATUS_UNTRACKED_IDENTIFIER then
+				mode = STATUS_UNTRACKED
+			elsif STATUS_IGNORE_OTHERS.include?(aLine) then
+			else
+				case mode
+					when STATUS_CHANGES_NOT_STAGED, STATUS_CHANGES_TO_BE_COMMITED
+						begin
+							pos = aLine.index(STATUS_CHANGES_MODIFIED)
+							if pos!=nil then
+								aFile = aLine.slice(pos+STATUS_CHANGES_MODIFIED_LEN+1,aLine.length).strip
+								if File.exist?(aFile)
+									if mode == STATUS_CHANGES_TO_BE_COMMITED then
+										result_to_be_commited << aFile
+									else
+										result_changes_not_staged << aFile
+									end
+								end
+							end
+						end
+					when STATUS_UNTRACKED
+						result_untracked << aLine if File.exist?(aLine)
+				end
+			end
+		end
+
+		all_modified = result_to_be_commited.clone()
+		all_modified.concat( result_changes_not_staged )
+		all_modified.concat( result_untracked )
+		all_modified = all_modified.to_set.to_a
+
+		return all_modified, result_to_be_commited, result_changes_not_staged, result_untracked
 	end
 
 	def self._getValue(aLine, key)
@@ -291,6 +358,10 @@ class GitUtil
 			results[:theLine] = result.last.to_s.strip
 		end
 		return results
+	end
+
+	def self.blame(gitPath, filename, line, commitId="HEAD")
+		return gitBlame(gitPath, filename, line, commitId)
 	end
 
 	# patch style
