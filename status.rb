@@ -21,3 +21,9 @@ puts "All modified = #{all_modified.join("\n\t")}"
 puts "To_be_commited = #{result_to_be_commited.join("\n\t")}"
 puts "Changes not staged = #{result_changes_not_staged.join("\n\t")}"
 puts "Untracked = #{result_untracked.join("\n\t")}"
+
+all_modified.each do |aFile|
+	result = GitUtil.diff(".", "HEAD #{aFile}")
+	puts result.join("")
+	puts ""
+end

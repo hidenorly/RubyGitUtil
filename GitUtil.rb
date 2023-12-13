@@ -328,6 +328,12 @@ class GitUtil
 		return all_modified, result_to_be_commited, result_changes_not_staged, result_untracked
 	end
 
+	def self.diff(gitPath, gitOpt = "")
+		exec_cmd = "git diff #{gitOpt ? gitOpt : ""}"
+		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath, false, false, true)
+	end
+
+
 	def self._getValue(aLine, key)
 		result = nil
 		aLine = aLine.to_s
