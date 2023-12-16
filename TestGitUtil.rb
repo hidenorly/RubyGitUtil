@@ -259,4 +259,19 @@ class TestGitUtil < Minitest::Test
 	def test_isCommitExistWithFileAndGitOpts
 		assert_equal true, GitUtil.isCommitExistWithFileAndGitOpts(".", "GitUtil.rb")
 	end
+
+	DEF_TEMPFILE = "_tempfile.txt"
+	def test_status
+		if File.exist?(DEF_TEMPFILE) then
+			puts "Please execute test case after clean condition on git status"
+		else
+			FileUtil.writeFile(DEF_TEMPFILE, ["hello"])
+			all_modified, result_to_be_commited, result_changes_not_staged, result_untracked = GitUtil.status(".")
+			assert_equal true, all_modified.include?(DEF_TEMPFILE)
+			assert_equal false, result_to_be_commited.include?(DEF_TEMPFILE)
+			assert_equal false, result_changes_not_staged.include?(DEF_TEMPFILE)
+			assert_equal true, result_untracked.include?(DEF_TEMPFILE)
+			# TODO: Add git add and check status...
+		end
+	end
 end
