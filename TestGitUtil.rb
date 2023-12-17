@@ -261,7 +261,7 @@ class TestGitUtil < Minitest::Test
 	end
 
 	DEF_TEMPFILE = "_tempfile.txt"
-	def test_status
+	def test_statusAndAdd
 		if File.exist?(DEF_TEMPFILE) then
 			puts "Please execute test case after clean condition on git status"
 		else
@@ -271,7 +271,18 @@ class TestGitUtil < Minitest::Test
 			assert_equal false, result_to_be_commited.include?(DEF_TEMPFILE)
 			assert_equal false, result_changes_not_staged.include?(DEF_TEMPFILE)
 			assert_equal true, result_untracked.include?(DEF_TEMPFILE)
-			# TODO: Add git add and check status...
+
+			# Add git add and check status...
+			GitUtil.add(".", [DEF_TEMPFILE])
+			all_modified, result_to_be_commited, result_changes_not_staged, result_untracked = GitUtil.status(".")
+			assert_equal true, all_modified.include?(DEF_TEMPFILE)
+			assert_equal true, result_to_be_commited.include?(DEF_TEMPFILE)
+			assert_equal false, result_changes_not_staged.include?(DEF_TEMPFILE)
+			assert_equal false, result_untracked.include?(DEF_TEMPFILE)
+
+			# TODO: git restore
+
+			FileUtils.rm(DEF_TEMPFILE)
 		end
 	end
 end

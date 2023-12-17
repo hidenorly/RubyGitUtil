@@ -267,6 +267,7 @@ class GitUtil
 	STATUS_CHANGES_NOT_STAGED = 1
 	STATUS_CHANGES_NOT_STAGED_IDENTIFIER = "Changes not staged for commit:"
 	STATUS_CHANGES_MODIFIED = "modified:"
+	STATUC_CHANGES_NEWFILE = "new file:"
 	STATUS_CHANGES_MODIFIED_LEN = STATUS_CHANGES_MODIFIED.length
 
 	STATUS_UNTRACKED = 2
@@ -303,6 +304,7 @@ class GitUtil
 					when STATUS_CHANGES_NOT_STAGED, STATUS_CHANGES_TO_BE_COMMITED
 						begin
 							pos = aLine.index(STATUS_CHANGES_MODIFIED)
+							pos = aLine.index(STATUC_CHANGES_NEWFILE) if pos==nil
 							if pos!=nil then
 								aFile = aLine.slice(pos+STATUS_CHANGES_MODIFIED_LEN+1,aLine.length).strip
 								if File.exist?(aFile)
@@ -331,6 +333,20 @@ class GitUtil
 	def self.diff(gitPath, gitOpt = "")
 		exec_cmd = "git diff #{gitOpt ? gitOpt : ""}"
 		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath, false, false, true)
+	end
+
+	def self.add(gitPath, files, gitOpt = "")
+		result = []
+		foundFiles = []
+		files.each do |aFile|
+			foundFiles << aFile if File.exist?("#{gitPath}/#{aFile}")
+		end
+		if !foundFiles.empty? then
+			exec_cmd = "git add #{gitOpt ? gitOpt : ""}  -- #{foundFiles.join(" ")}"
+			result = ExecUtil.getExecResultEachLine(exec_cmd, gitPath, true, true, true)
+		end
+
+		return result
 	end
 
 
