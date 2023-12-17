@@ -349,6 +349,10 @@ class GitUtil
 		return result
 	end
 
+	def self.unstange(gitPath, files, gitOpt = "")
+		exec_cmd = "git restore --staged #{files.join(" ")}"
+		return ExecUtil.getExecResultEachLine(exec_cmd, gitPath, true, true, true)
+	end
 
 	def self._getValue(aLine, key)
 		result = nil
