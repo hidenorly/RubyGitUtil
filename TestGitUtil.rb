@@ -49,6 +49,11 @@ class TestGitUtil < Minitest::Test
 		assert_equal true, GitUtil.containCommitOnBranch?(".", DEF_INITIAL_COMMIT)
 	end
 
+	DEF_BRANCH_MAIN = "remotes/origin/main"
+	def test_contains
+		assert_equal true, GitUtil.contains(".", DEF_INITIAL_COMMIT).include?(DEF_BRANCH_MAIN)
+	end
+
 	def test_getAllCommitIdList
 		commits = GitUtil.getAllCommitIdList(".")
 		assert_equal true, commits.include?(DEF_INITIAL_COMMIT)

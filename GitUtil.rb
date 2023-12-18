@@ -617,6 +617,10 @@ class GitUtil
 		return ExecUtil.hasResult?("git rev-list HEAD | grep #{commitId}", gitPath)
 	end
 
+	def self.contains(gitPath, commitId)
+		return ExecUtil.getExecResultEachLine("git branch -a --contains=#{commitId}", gitPath, false, true, true)
+	end
+
 	def self.containCommitInGit?(gitPath, commitId)
 		return ExecUtil.hasResult?("git show #{commitId}", gitPath)
 	end
